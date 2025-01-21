@@ -1,0 +1,7 @@
+# .dockerignore at the root
+**/node_modules/
+**/.git
+**/*.log
+Dockerfile*
+docker-compose.yaml
+.env

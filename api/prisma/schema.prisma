@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  password     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tasks        Task[]   // ユーザーが所有するタスク
+  groupMembers GroupMember[]
+}
+
+enum Priority {
+  HIGH      // 高
+  MEDIUM    // 中
+  LOW       // 低
+  CRITICAL  // 重要
+  OPTIONAL  // 任意
+}
+
+enum STATUS {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+enum LABEL {
+  DOCUMENT   // ドキュメント作成や更新
+  BUG        // バグ修正
+  FEATURE    // 新機能の開発や実装
+  ENHANCEMENT // 機能の改善
+  REFACTOR   // コードのリファクタリング
+  RESEARCH   // 調査や情報収集
+  TESTING    // テスト作成や実行
+}
+
+model Task {
+  id          Int    @id @default(autoincrement())
+  title       String                                                    // タスクのタイトル
+  description String?                                                   // タスクの説明（任意）
+  status      STATUS    @default(BACKLOG)                               // タスクの状態
+  label       LABEL     @default(DOCUMENT)                              // タスクに関連付けられたラベル
+  priority    Priority  @default(MEDIUM)                                // 優先度
+  dueDate     DateTime?                                                 // 締切日（任意）
+  ownerId     String                                                    // タスクの作成者
+  owner       User      @relation(fields: [ownerId], references: [id])
+  groupId     String?                                                   // グループのタスクかどうか
+  group       Group?    @relation(fields: [groupId], references: [id])
+  isPrivate   Boolean   @default(false)                                 // プライベートタスクかどうか
+  tags        String[]  @default([])                                    // タスクに関連付けられたタグ
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?                                                 // 論理削除用
+}
+
+model Group {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  members     GroupMember[]
+  tasks       Task[]    // グループに紐づくタスク
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+model GroupMember {
+  id          String    @id @default(cuid())
+  groupId     String
+  userId      String
+  role        GroupRole @default(MEMBER)
+  group       Group     @relation(fields: [groupId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

@@ -1,0 +1,45 @@
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: ../dockerfile/Dockerfile.web
+    ports:
+      - 3000:3000
+    volumes:
+      - ./web:/web
+    env_file:
+      - ./web/.env
+    networks:
+      - app-network
+    depends_on:
+      - api
+  api:
+    build:
+      context: ./api
+      dockerfile: ../dockerfile/Dockerfile.api
+    ports:
+      - 3001:3001
+      - 5555:5555
+    volumes:
+      - ./api:/api
+    environment:
+      - NODE_ENV=development
+    networks:
+      - app-network
+    depends_on:
+      - db
+    env_file:
+      - ./api/.env
+  db:
+    image: postgres:latest
+    container_name: db
+    env_file:
+      - ./api/.env
+    ports:
+      - 5432:5432
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
